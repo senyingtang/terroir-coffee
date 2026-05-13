@@ -1,177 +1,305 @@
 'use client'
 
-import { useRef, useEffect, useCallback } from 'react'
+import { useRef, useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 
-const cards = [
+const chapters = [
   {
-    id: 1,
-    label: '01 — Ethiopia · Yirgacheffe',
+    num: '01',
+    label: 'CHAPTER 01 — ETHIOPIA',
     title: 'The Ancient Forest',
-    body: 'At 1,900m, wild coffee trees grow under a canopy that has existed for millennia. The forest defines the cup.',
-    src: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&q=80',
+    desc: "At 1,900 metres above sea level in Ethiopia's Gedeo Zone, wild coffee trees grow beneath a canopy that has stood for millennia. Here, coffee is not cultivated — it is discovered.",
+    detail: 'Yirgacheffe · 1,900m · Heirloom Varieties',
+    image: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=1400&q=80',
   },
   {
-    id: 2,
-    label: '02 — Selective Harvest',
+    num: '02',
+    label: 'CHAPTER 02 — HARVEST',
     title: 'Only Ripe Cherries',
-    body: 'Pickers return to each branch up to fifteen times per season. Patience is the first ingredient.',
-    src: 'https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=800&q=80',
+    desc: 'Pickers visit each tree up to fifteen times per season, selecting only cherries at peak ripeness. This patience is the invisible ingredient in every bag we sell.',
+    detail: 'Hand-picked · Peak ripeness only',
+    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=80',
   },
   {
-    id: 3,
-    label: '03 — Natural Process',
+    num: '03',
+    label: 'CHAPTER 03 — PROCESS',
     title: 'Sun & Patience',
-    body: 'Twenty-one days on raised drying beds. The fruit ferments slowly — gifting wine-like sweetness.',
-    src: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=800&q=80',
+    desc: 'Cherries are spread on raised African beds and turned by hand twice daily for twenty-one days. The fruit ferments slowly — gifting a wine-like complexity no machine can replicate.',
+    detail: 'Natural process · 21 days · Raised beds',
+    image: 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=1400&q=80',
   },
   {
-    id: 4,
-    label: '04 — Taipei Roastery',
+    num: '04',
+    label: 'CHAPTER 04 — ROASTERY',
     title: 'The Transformation',
-    body: 'Each lot is roasted to its own profile — never a template, always a conversation with the bean.',
-    src: 'https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=800&q=80',
+    desc: 'In our Zhongzheng roastery, each lot is roasted to a profile designed for that specific harvest. We listen for first crack and trust what the bean tells us.',
+    detail: 'Taipei · Small batch · Profile roasted',
+    image: 'https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=1400&q=80',
   },
 ]
 
-function Card({ card, index }: { card: typeof cards[0]; index: number }) {
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.style.opacity = '0'
-    el.style.transform = 'translateY(32px)'
-    el.style.transition = `opacity 0.6s ease ${index * 0.12}s, transform 0.6s ease ${index * 0.12}s`
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          el.style.opacity = '1'
-          el.style.transform = 'translateY(0)'
-          obs.disconnect()
-        }
-      },
-      { threshold: 0.15 }
-    )
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [index])
-
-  return (
-    <div
-      ref={ref}
-      className="group shrink-0 flex flex-col overflow-hidden"
-      style={{ flex: '0 0 460px', scrollSnapAlign: 'start', backgroundColor: 'var(--bg2)' }}
-    >
-      <div className="relative overflow-hidden" style={{ height: '340px' }}>
-        <Image
-          src={card.src}
-          alt={card.title}
-          fill
-          loading="lazy"
-          className="object-cover transition-all duration-700 group-hover:scale-[1.06]"
-          style={{ filter: 'saturate(0.7)', transition: 'transform 0.7s ease, filter 0.7s ease' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLImageElement).style.filter = 'saturate(1)' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLImageElement).style.filter = 'saturate(0.7)' }}
-          sizes="460px"
-        />
-      </div>
-      <div className="flex flex-col gap-3 p-8">
-        <span
-          className="text-xs tracking-[0.2em] uppercase font-[family-name:var(--font-jost)]"
-          style={{ color: 'var(--taupe)' }}
-        >
-          {card.label}
-        </span>
-        <h3
-          className="font-[family-name:var(--font-cormorant)] text-2xl font-medium"
-          style={{ color: 'var(--text)' }}
-        >
-          {card.title}
-        </h3>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text2)' }}>
-          {card.body}
-        </p>
-      </div>
-    </div>
-  )
-}
-
 export default function OriginStory() {
-  const scrollRef = useRef<HTMLDivElement>(null)
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const panelRefs  = useRef<(HTMLDivElement | null)[]>([])
+  const textRefs   = useRef<(HTMLDivElement | null)[]>([])
+  const [activeIndex, setActiveIndex] = useState(0)
 
-  const scroll = useCallback((dir: number) => {
-    scrollRef.current?.scrollBy({ left: dir * 480, behavior: 'smooth' })
+  /* ── Active-panel tracker (drives nav dots) ── */
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const observers: IntersectionObserver[] = []
+
+    panelRefs.current.forEach((panel, i) => {
+      if (!panel) return
+      const obs = new IntersectionObserver(
+        ([entry]) => { if (entry.isIntersecting) setActiveIndex(i) },
+        { root: container, threshold: 0.5 }
+      )
+      obs.observe(panel)
+      observers.push(obs)
+    })
+    return () => observers.forEach((o) => o.disconnect())
+  }, [])
+
+  /* ── Text fade-up per panel ── */
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+    const observers: IntersectionObserver[] = []
+
+    textRefs.current.forEach((el) => {
+      if (!el) return
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            el.style.opacity = '1'
+            el.style.transform = 'translateY(0)'
+            obs.disconnect()
+          }
+        },
+        { root: container, threshold: 0.25 }
+      )
+      obs.observe(el)
+      observers.push(obs)
+    })
+    return () => observers.forEach((o) => o.disconnect())
+  }, [])
+
+  const scrollTo = useCallback((index: number) => {
+    scrollRef.current?.scrollTo({ left: index * window.innerWidth, behavior: 'smooth' })
   }, [])
 
   return (
-    <section className="py-24 md:py-32 overflow-hidden" style={{ backgroundColor: 'var(--bg)' }}>
-      {/* Header */}
-      <div className="mx-auto max-w-7xl px-8 md:px-16 mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8">
-        <div>
-          <p
-            className="mb-4 text-xs tracking-[0.3em] uppercase font-[family-name:var(--font-jost)]"
-            style={{ color: 'var(--taupe)' }}
-          >
-            OUR JOURNEY
-          </p>
-          <h2
-            className="font-[family-name:var(--font-cormorant)] font-light leading-none"
-            style={{ color: 'var(--text)', fontSize: 'clamp(2.5rem, 5vw, 5rem)' }}
-          >
-            From <em>Farm</em>
-            <br />
-            to Cup
-          </h2>
-        </div>
-        <p className="max-w-sm text-sm leading-relaxed" style={{ color: 'var(--text2)' }}>
-          Every bean carries the memory of its land — altitude, rainfall, harvest day. We trace each lot from the specific plot it came from.
+    <section style={{ backgroundColor: 'var(--bg)' }}>
+
+      {/* ── Section Header ── */}
+      <div className="origin-header" style={{ backgroundColor: 'var(--bg)' }}>
+        <p
+          className="font-[family-name:var(--font-jost)]"
+          style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--taupe)', marginBottom: 18 }}
+        >
+          OUR JOURNEY
         </p>
+        <h2
+          className="font-[family-name:var(--font-cormorant)]"
+          style={{ fontSize: 'clamp(48px, 7vw, 80px)', fontWeight: 300, lineHeight: 1, color: 'var(--text)' }}
+        >
+          From <em style={{ fontStyle: 'italic', color: 'var(--taupe)' }}>Farm</em> to Cup
+        </h2>
       </div>
 
-      {/* Horizontal scroll container */}
+      {/* ── Horizontal Scroll Container ── */}
       <div
         ref={scrollRef}
-        className="flex gap-px overflow-x-auto pl-8 md:pl-16 pb-4"
+        className="origin-scroll"
         style={{
+          display: 'flex',
+          overflowX: 'auto',
           scrollSnapType: 'x mandatory',
-          scrollbarWidth: 'none',
-          msOverflowStyle: 'none',
+          height: '85vh',
           backgroundColor: 'var(--line)',
+          gap: '1px',
         }}
       >
-        {cards.map((card, i) => (
-          <Card key={card.id} card={card} index={i} />
+        {chapters.map((ch, i) => (
+          <div
+            key={i}
+            ref={(el) => { panelRefs.current[i] = el }}
+            className="origin-panel"
+            style={{
+              flex: '0 0 100vw',
+              scrollSnapAlign: 'start',
+              display: 'grid',
+              height: '100%',
+            }}
+          >
+            {/* Image side */}
+            <div
+              className="origin-image-side"
+              style={{ position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg3)' }}
+            >
+              <Image
+                src={ch.image}
+                alt={ch.title}
+                fill
+                loading={i === 0 ? 'eager' : 'lazy'}
+                priority={i === 0}
+                sizes="(max-width: 768px) 100vw, 60vw"
+                style={{
+                  objectFit: 'cover',
+                  filter: 'saturate(0.65)',
+                  transition: 'filter 0.8s ease',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.filter = 'saturate(1)'
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.filter = 'saturate(0.65)'
+                }}
+              />
+              {/* Ghost chapter number */}
+              <span
+                className="origin-ghost-num font-[family-name:var(--font-cormorant)]"
+                style={{
+                  position: 'absolute',
+                  bottom: 32,
+                  left: 40,
+                  fontWeight: 300,
+                  lineHeight: 1,
+                  color: 'rgba(255,255,255,0.08)',
+                  userSelect: 'none',
+                  pointerEvents: 'none',
+                }}
+              >
+                {ch.num}
+              </span>
+            </div>
+
+            {/* Text side */}
+            <div
+              ref={(el) => { textRefs.current[i] = el }}
+              className="origin-text-side"
+              style={{
+                backgroundColor: 'var(--bg2)',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                opacity: 0,
+                transform: 'translateY(20px)',
+                transition: 'opacity 0.7s ease 0.1s, transform 0.7s ease 0.1s',
+              }}
+            >
+              <p
+                className="font-[family-name:var(--font-jost)]"
+                style={{ fontSize: 9, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--taupe)', marginBottom: 24 }}
+              >
+                {ch.label}
+              </p>
+              <h3
+                className="font-[family-name:var(--font-cormorant)]"
+                style={{ fontSize: 44, fontWeight: 300, lineHeight: 1.1, marginBottom: 24, color: 'var(--text)' }}
+              >
+                {ch.title}
+              </h3>
+              <div style={{ width: 40, height: 1, backgroundColor: 'var(--line)', marginBottom: 24 }} />
+              <p
+                className="font-[family-name:var(--font-jost)]"
+                style={{ fontSize: 15, lineHeight: 1.9, color: 'var(--text2)', maxWidth: 380 }}
+              >
+                {ch.desc}
+              </p>
+              <p
+                className="font-[family-name:var(--font-jost)]"
+                style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--taupe-lt)', marginTop: 32 }}
+              >
+                {ch.detail}
+              </p>
+            </div>
+          </div>
         ))}
-        {/* Trailing spacer */}
-        <div className="shrink-0 w-8 md:w-16" style={{ backgroundColor: 'var(--bg)' }} />
       </div>
 
-      {/* Arrow navigation */}
-      <div className="mx-auto max-w-7xl px-8 md:px-16 mt-8 flex items-center gap-4">
-        <button
-          onClick={() => scroll(-1)}
-          className="flex h-12 w-12 items-center justify-center border transition-all duration-200 hover:opacity-60 active:scale-95"
-          style={{ borderColor: 'var(--line)', color: 'var(--text2)' }}
-          aria-label="Previous"
-        >
-          ←
-        </button>
-        <button
-          onClick={() => scroll(1)}
-          className="flex h-12 w-12 items-center justify-center border transition-all duration-200 hover:opacity-60 active:scale-95"
-          style={{ borderColor: 'var(--line)', color: 'var(--text2)' }}
-          aria-label="Next"
-        >
-          →
-        </button>
+      {/* ── Navigation Bar ── */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '24px 64px',
+          backgroundColor: 'var(--bg)',
+          borderTop: '1px solid var(--line)',
+        }}
+      >
+        {/* Progress pills */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {chapters.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => scrollTo(i)}
+              aria-label={`Go to chapter ${i + 1}`}
+              style={{
+                width:  i === activeIndex ? 32 : 8,
+                height: 3,
+                backgroundColor: i === activeIndex ? 'var(--accent)' : 'var(--line)',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                transition: 'width 0.35s ease, background-color 0.35s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Chapter label */}
         <span
-          className="ml-2 text-xs tracking-widest uppercase font-[family-name:var(--font-jost)]"
-          style={{ color: 'var(--taupe-lt)' }}
+          className="font-[family-name:var(--font-jost)]"
+          style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: 'var(--taupe-lt)' }}
         >
-          Drag to explore
+          {String(activeIndex + 1).padStart(2, '0')} / 04
         </span>
+
+        {/* Arrow buttons */}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: -window.innerWidth, behavior: 'smooth' })}
+            aria-label="Previous chapter"
+            style={{
+              width: 44, height: 44,
+              border: '1px solid var(--line)',
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+              fontSize: 16,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text2)',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.5')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            ←
+          </button>
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: window.innerWidth, behavior: 'smooth' })}
+            aria-label="Next chapter"
+            style={{
+              width: 44, height: 44,
+              border: '1px solid var(--line)',
+              backgroundColor: 'transparent',
+              cursor: 'pointer',
+              fontSize: 16,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--text2)',
+              transition: 'opacity 0.2s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = '0.5')}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = '1')}
+          >
+            →
+          </button>
+        </div>
       </div>
+
     </section>
   )
 }

@@ -82,3 +82,23 @@ html.lenis, html.lenis body { height: auto; }
 
 /* ── Image drag prevention ─────────────────────────── */
 img { -webkit-user-drag: none; user-drag: none; }
+
+/* ── Origin Story ──────────────────────────────────── */
+.origin-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+.origin-scroll::-webkit-scrollbar { display: none; }
+
+.origin-panel { grid-template-columns: 60% 40%; }
+.origin-ghost-num { font-size: 180px; }
+.origin-text-side { padding: 0 64px; }
+.origin-header { padding: 120px 64px 60px; }
+
+@media (max-width: 768px) {
+  .origin-panel {
+    grid-template-columns: 1fr;
+    grid-template-rows: 50vh 1fr;
+  }
+  .origin-image-side { height: 50vh; }
+  .origin-text-side  { padding: 32px 24px !important; }
+  .origin-ghost-num  { font-size: 100px !important; }
+  .origin-header     { padding: 72px 24px 40px !important; }
+}
