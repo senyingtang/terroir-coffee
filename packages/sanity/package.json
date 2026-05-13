@@ -1,0 +1,10 @@
+{
+  "name": "@terroir/sanity",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./schemas/index.ts",
+  "types": "./schemas/index.ts",
+  "peerDependencies": {
+    "sanity": "^3.0.0"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "@terroir/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sanity/client": "^6.15.7",
+    "@sanity/image-url": "^1.0.2",
+    "framer-motion": "^11.18.2",
+    "gsap": "^3.12.5",
+    "lenis": "^1.1.9",
+    "motion": "^11.2.10",
+    "next": "14.2.35",
+    "next-sanity": "^9.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sanity": "^3.39.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^20.12.7",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.4.5"
+  }
+}

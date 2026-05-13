@@ -1,0 +1,6 @@
+export { hero } from './hero'
+export { product } from './product'
+export { originStory } from './originStory'
+export { manifesto } from './manifesto'
+export { teamMember } from './teamMember'
+export { siteSettings } from './siteSettings'
