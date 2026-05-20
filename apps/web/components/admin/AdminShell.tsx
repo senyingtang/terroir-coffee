@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -21,6 +21,9 @@ const NAV_ITEMS = [
 export default function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
+  const pathnameRef = useRef(pathname)
+  pathnameRef.current = pathname
+
   const [loading, setLoading] = useState(true)
   const [authed, setAuthed] = useState(false)
 
@@ -28,7 +31,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setAuthed(true)
-      } else if (pathname !== '/admin/login') {
+      } else if (pathnameRef.current !== '/admin/login') {
         router.replace('/admin/login')
       }
       setLoading(false)
@@ -36,17 +39,21 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setAuthed(!!session)
-      if (!session && pathname !== '/admin/login') {
+      if (!session && pathnameRef.current !== '/admin/login') {
         router.replace('/admin/login')
       }
     })
 
     return () => subscription.unsubscribe()
-  }, [router, pathname])
+  }, [router])
 
   const logout = async () => {
     await supabase.auth.signOut()
     router.replace('/admin/login')
+  }
+
+  if (pathname === '/admin/login') {
+    return <>{children}</>
   }
 
   if (loading) {
@@ -55,10 +62,6 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
         <p style={{ fontFamily: 'sans-serif', color: '#8C7B6B', fontSize: 14 }}>Loading...</p>
       </div>
     )
-  }
-
-  if (pathname === '/admin/login') {
-    return <>{children}</>
   }
 
   if (!authed) return null
