@@ -4,8 +4,15 @@ import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { gsap } from 'gsap'
+import type { HeroData } from '@/lib/db-types'
+import { HERO_FALLBACK } from '@/lib/db-types'
 
-const textLines = ['Where', 'Soil', 'Becomes Flavour']
+function parseTitleLines(title: string): string[] {
+  if (title.includes('\n')) return title.split('\n').filter(Boolean)
+  const words = title.split(' ')
+  if (words.length <= 2) return words
+  return [words[0], words[1], words.slice(2).join(' ')]
+}
 
 const springVariant = {
   hidden: { opacity: 0, y: 60 },
@@ -16,17 +23,22 @@ const springVariant = {
   }),
 }
 
-export default function Hero() {
+interface HeroProps {
+  data?: HeroData
+}
+
+export default function Hero({ data }: HeroProps) {
+  const d = data ?? HERO_FALLBACK
+  const textLines = parseTitleLines(d.title)
+
   const imgRef     = useRef<HTMLDivElement>(null)
   const sectionRef = useRef<HTMLElement>(null)
 
-  // GSAP zoom-out
   useEffect(() => {
     if (!imgRef.current) return
     gsap.fromTo(imgRef.current, { scale: 1.12 }, { scale: 1.0, duration: 3, ease: 'power2.out' })
   }, [])
 
-  // Parallax
   useEffect(() => {
     const onScroll = () => {
       if (!imgRef.current) return
@@ -39,10 +51,9 @@ export default function Hero() {
   return (
     <section ref={sectionRef} className="relative h-[100dvh] w-full overflow-hidden">
 
-      {/* Background image */}
       <div ref={imgRef} className="absolute inset-0 will-change-transform">
         <Image
-          src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=1800&q=85"
+          src={d.background_image}
           alt="Coffee farm landscape"
           fill
           priority
@@ -51,16 +62,13 @@ export default function Hero() {
         />
       </div>
 
-      {/* Dark overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
-      {/* Bottom gradient */}
       <div
         className="absolute bottom-0 left-0 right-0 h-2/3 pointer-events-none"
         style={{ background: 'linear-gradient(to top, var(--bg) 0%, transparent 100%)' }}
       />
 
-      {/* Left-bottom text */}
       <div className="absolute bottom-16 left-8 md:left-16 max-w-2xl">
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -69,7 +77,7 @@ export default function Hero() {
           className="mb-6 font-[family-name:var(--font-jost)] uppercase"
           style={{ fontSize: '9px', letterSpacing: '5px', color: 'var(--taupe-lt)' }}
         >
-          Single Origin · Micro Lot · Taipei Roastery
+          {d.eyebrow}
         </motion.p>
 
         <h1
@@ -78,7 +86,7 @@ export default function Hero() {
         >
           {textLines.map((line, i) => (
             <motion.span
-              key={line}
+              key={i}
               custom={i}
               variants={springVariant}
               initial="hidden"
@@ -94,7 +102,6 @@ export default function Hero() {
         </h1>
       </div>
 
-      {/* Right-bottom: description + scroll hint */}
       <div className="absolute bottom-16 right-8 md:right-16 flex flex-col items-end gap-6 max-w-xs text-right">
         <motion.p
           initial={{ opacity: 0 }}
@@ -103,9 +110,7 @@ export default function Hero() {
           className="text-sm leading-relaxed font-[family-name:var(--font-jost)]"
           style={{ color: 'var(--taupe-lt)' }}
         >
-          We source directly from smallholder farmers in Ethiopia,
-          <br />
-          Colombia, and Taiwan — then roast every lot to its own rhythm.
+          {d.description}
         </motion.p>
 
         <motion.div
@@ -118,7 +123,7 @@ export default function Hero() {
             className="font-[family-name:var(--font-jost)]"
             style={{ fontSize: '8px', letterSpacing: '4px', color: 'var(--taupe-lt)' }}
           >
-            Scroll to explore
+            {d.scroll_text}
           </span>
           <div
             className="h-16 w-px origin-top"

@@ -2,49 +2,21 @@
 
 import { useRef, useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
+import type { OriginChapter } from '@/lib/db-types'
+import { ORIGIN_CHAPTERS_FALLBACK } from '@/lib/db-types'
 
-const chapters = [
-  {
-    num: '01',
-    label: 'CHAPTER 01 — ETHIOPIA',
-    title: 'The Ancient Forest',
-    desc: "At 1,900 metres above sea level in Ethiopia's Gedeo Zone, wild coffee trees grow beneath a canopy that has stood for millennia. Here, coffee is not cultivated — it is discovered.",
-    detail: 'Yirgacheffe · 1,900m · Heirloom Varieties',
-    image: 'https://images.unsplash.com/photo-1524350876685-274059332603?w=1400&q=80',
-  },
-  {
-    num: '02',
-    label: 'CHAPTER 02 — HARVEST',
-    title: 'Only Ripe Cherries',
-    desc: 'Pickers visit each tree up to fifteen times per season, selecting only cherries at peak ripeness. This patience is the invisible ingredient in every bag we sell.',
-    detail: 'Hand-picked · Peak ripeness only',
-    image: 'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&q=80',
-  },
-  {
-    num: '03',
-    label: 'CHAPTER 03 — PROCESS',
-    title: 'Sun & Patience',
-    desc: 'Cherries are spread on raised African beds and turned by hand twice daily for twenty-one days. The fruit ferments slowly — gifting a wine-like complexity no machine can replicate.',
-    detail: 'Natural process · 21 days · Raised beds',
-    image: 'https://images.unsplash.com/photo-1611854779393-1b2da9d400fe?w=1400&q=80',
-  },
-  {
-    num: '04',
-    label: 'CHAPTER 04 — ROASTERY',
-    title: 'The Transformation',
-    desc: 'In our Zhongzheng roastery, each lot is roasted to a profile designed for that specific harvest. We listen for first crack and trust what the bean tells us.',
-    detail: 'Taipei · Small batch · Profile roasted',
-    image: 'https://images.unsplash.com/photo-1504630083234-14187a9df0f5?w=1400&q=80',
-  },
-]
+interface OriginStoryProps {
+  chapters?: OriginChapter[]
+}
 
-export default function OriginStory() {
+export default function OriginStory({ chapters }: OriginStoryProps) {
+  const data = chapters?.length ? chapters : ORIGIN_CHAPTERS_FALLBACK
+
   const scrollRef  = useRef<HTMLDivElement>(null)
   const panelRefs  = useRef<(HTMLDivElement | null)[]>([])
   const textRefs   = useRef<(HTMLDivElement | null)[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
 
-  /* ── Active-panel tracker (drives nav dots) ── */
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -60,9 +32,8 @@ export default function OriginStory() {
       observers.push(obs)
     })
     return () => observers.forEach((o) => o.disconnect())
-  }, [])
+  }, [data])
 
-  /* ── Text fade-up per panel ── */
   useEffect(() => {
     const container = scrollRef.current
     if (!container) return
@@ -84,7 +55,7 @@ export default function OriginStory() {
       observers.push(obs)
     })
     return () => observers.forEach((o) => o.disconnect())
-  }, [])
+  }, [data])
 
   const scrollTo = useCallback((index: number) => {
     scrollRef.current?.scrollTo({ left: index * window.innerWidth, behavior: 'smooth' })
@@ -93,7 +64,6 @@ export default function OriginStory() {
   return (
     <section style={{ backgroundColor: 'var(--bg)' }}>
 
-      {/* ── Section Header ── */}
       <div className="origin-header" style={{ backgroundColor: 'var(--bg)' }}>
         <p
           className="font-[family-name:var(--font-jost)]"
@@ -109,7 +79,6 @@ export default function OriginStory() {
         </h2>
       </div>
 
-      {/* ── Horizontal Scroll Container ── */}
       <div
         ref={scrollRef}
         className="origin-scroll"
@@ -122,9 +91,9 @@ export default function OriginStory() {
           gap: '1px',
         }}
       >
-        {chapters.map((ch, i) => (
+        {data.map((ch, i) => (
           <div
-            key={i}
+            key={ch.id}
             ref={(el) => { panelRefs.current[i] = el }}
             className="origin-panel"
             style={{
@@ -134,13 +103,12 @@ export default function OriginStory() {
               height: '100%',
             }}
           >
-            {/* Image side */}
             <div
               className="origin-image-side"
               style={{ position: 'relative', overflow: 'hidden', backgroundColor: 'var(--bg3)' }}
             >
               <Image
-                src={ch.image}
+                src={ch.image_url}
                 alt={ch.title}
                 fill
                 loading={i === 0 ? 'eager' : 'lazy'}
@@ -158,7 +126,6 @@ export default function OriginStory() {
                   (e.currentTarget as HTMLImageElement).style.filter = 'saturate(0.65)'
                 }}
               />
-              {/* Ghost chapter number */}
               <span
                 className="origin-ghost-num font-[family-name:var(--font-cormorant)]"
                 style={{
@@ -172,11 +139,10 @@ export default function OriginStory() {
                   pointerEvents: 'none',
                 }}
               >
-                {ch.num}
+                {ch.chapter_num}
               </span>
             </div>
 
-            {/* Text side */}
             <div
               ref={(el) => { textRefs.current[i] = el }}
               className="origin-text-side"
@@ -207,7 +173,7 @@ export default function OriginStory() {
                 className="font-[family-name:var(--font-jost)]"
                 style={{ fontSize: 15, lineHeight: 1.9, color: 'var(--text2)', maxWidth: 380 }}
               >
-                {ch.desc}
+                {ch.description}
               </p>
               <p
                 className="font-[family-name:var(--font-jost)]"
@@ -220,7 +186,6 @@ export default function OriginStory() {
         ))}
       </div>
 
-      {/* ── Navigation Bar ── */}
       <div
         style={{
           display: 'flex',
@@ -231,9 +196,8 @@ export default function OriginStory() {
           borderTop: '1px solid var(--line)',
         }}
       >
-        {/* Progress pills */}
         <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {chapters.map((_, i) => (
+          {data.map((_, i) => (
             <button
               key={i}
               onClick={() => scrollTo(i)}
@@ -251,15 +215,13 @@ export default function OriginStory() {
           ))}
         </div>
 
-        {/* Chapter label */}
         <span
           className="font-[family-name:var(--font-jost)]"
           style={{ fontSize: 9, letterSpacing: 4, textTransform: 'uppercase', color: 'var(--taupe-lt)' }}
         >
-          {String(activeIndex + 1).padStart(2, '0')} / 04
+          {String(activeIndex + 1).padStart(2, '0')} / {String(data.length).padStart(2, '0')}
         </span>
 
-        {/* Arrow buttons */}
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             onClick={() => scrollRef.current?.scrollBy({ left: -window.innerWidth, behavior: 'smooth' })}

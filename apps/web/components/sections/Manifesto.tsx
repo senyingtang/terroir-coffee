@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { ManifestoData } from '@/lib/db-types'
+import { MANIFESTO_FALLBACK } from '@/lib/db-types'
 
-const quote =
-  "Good coffee is not a luxury — it is a quiet conversation between a farmer's hands, a roaster's instinct, and your morning stillness."
+interface ManifestoProps {
+  data?: ManifestoData
+}
 
-export default function Manifesto() {
+export default function Manifesto({ data }: ManifestoProps) {
+  const d = data ?? MANIFESTO_FALLBACK
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -32,10 +36,9 @@ export default function Manifesto() {
     )
     obs.observe(container)
     return () => obs.disconnect()
-  }, [])
+  }, [d.quote])
 
-  // Split by word for Latin text
-  const words = quote.split(' ')
+  const words = d.quote.split(' ')
 
   return (
     <section
@@ -43,7 +46,6 @@ export default function Manifesto() {
       style={{ backgroundColor: 'var(--bg3)' }}
     >
       <div className="mx-auto max-w-4xl text-center">
-        {/* Decorative line */}
         <div className="flex justify-center mb-16">
           <div className="w-px h-16" style={{ backgroundColor: 'var(--line)' }} />
         </div>
@@ -52,10 +54,9 @@ export default function Manifesto() {
           className="mb-8 text-xs tracking-[0.3em] uppercase font-[family-name:var(--font-jost)]"
           style={{ color: 'var(--taupe)' }}
         >
-          MANIFESTO
+          {d.label}
         </p>
 
-        {/* Word-by-word reveal */}
         <div
           ref={containerRef}
           className="font-[family-name:var(--font-cormorant)] font-light italic leading-snug"
@@ -72,12 +73,11 @@ export default function Manifesto() {
           ))}
         </div>
 
-        {/* Signature */}
         <p
           className="mt-12 text-sm font-[family-name:var(--font-jost)]"
           style={{ color: 'var(--taupe)' }}
         >
-          — Terroir Coffee · Taipei · 2019
+          {d.attribution}
         </p>
       </div>
     </section>
